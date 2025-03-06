@@ -1,0 +1,41 @@
+name: Build and Deploy Mediplus Lite Template
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout your repository
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # Set up Docker
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    # Build Docker image
+    - name: Build Docker Image
+      run: |
+        docker build -t mediplus-lite .
+
+    # Run Docker container for testing locally
+    - name: Run Docker Container
+      run: |
+        docker run -d -p 8080:80 --name mediplus-lite-container mediplus-lite
+
+    # (Optional) Deploy to a Docker Registry
+    - name: Log in to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+    - name: Push Docker Image to DockerHub
+      run: |
+        docker tag mediplus-lite ${{ secrets.DOCKER_HUB_USERNAME }}/mediplus-lite:latest
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/mediplus-lite:latest
